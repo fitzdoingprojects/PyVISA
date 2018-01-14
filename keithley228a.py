@@ -133,7 +133,7 @@ def main():
 	data = go.Data([stream_voltage, stream_current])
 
 	# Add title to layout object
-	layout = go.Layout(title='Double Y Axis Example',
+	layout = go.Layout(title='Keithley 228A LEAD ACID CHARGING (13.6V 0.5A)',
 		yaxis=dict(
 			title='Volts',
 			range=[1, 15]
@@ -176,7 +176,7 @@ def main():
 	k = 5    # some shape parameter
 
 	# Delay start of stream by 5 sec (time to switch tabs)
-	time.sleep(5)
+	time.sleep(1)
 	
 	#init
 	instr = visa.ResourceManager()
@@ -184,12 +184,16 @@ def main():
 	keithley = instr.open_resource('GPIB0::11::INSTR')
 	time.sleep(1)
 	keithley.write("V7") #put k228a in remote mode
+	print("Keithley 228A in remote mode\n")
 	time.sleep(1)
 	keithley.query("G0X") #read current output set point (NOT ACTUAL VALUES)
-	keithley.write("V12.6X") #sets voltage to 12.6V
-	keithley.write("I0.10X") #sets current to 100mA
+	keithley.write("V13.6X") #sets voltage to 12.6V
+	keithley.write("I0.5X") #sets current to 100mA
+	print("set to 13.6V and 0.5A\n")
 	time.sleep(1)
-
+	keithley.write("F1X") #turns on outputs
+	print("turn outputs on\n")
+	time.sleep(1)
 
 	while True:
 
