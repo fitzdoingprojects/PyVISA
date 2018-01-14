@@ -1,0 +1,6 @@
+pyusb
+pyvisa
+pyvisa-py
+python>=3.2
+plotly
+numpy
