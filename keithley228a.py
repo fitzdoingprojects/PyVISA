@@ -5,18 +5,25 @@ import plotly.tools as tls
 import plotly.graph_objs as go
 
 
-def keith228aINIT():
+def keith228a(): 
+	#init
 	instr = visa.ResourceManager()
 	instr.list_resources()
-	k228a = instr.open_resource('GPIB0::11::INSTR')
+	keithley = instr.open_resource('GPIB0::11::INSTR')
 	keithley.write("V7") #put k228a in remote mode
 
+	#command reference
 	keithley.query("G0X") #read current output set point (NOT ACTUAL VALUES)
 	keithley.write("V12.6X") #sets voltage to 12.6V
 	keithley.write("I0.10X") #sets current to 100mA
 	keithley.write("F0X") #turns off outputs
 	keithley.write("F1X") #turns on outputs
-	keithley.query("G4X") #reads current voltage/current (only works with outputs turned on)
+	keithley.query("G4X") #reads current voltage/current (only works with outputs turned on) with prefixes
+	keithley.query("G5X") #reads current voltage/current (only works with outputs turned on) without prefixes 
+	keithley.query_ascii_values("G5X") #returns array with current voltage a 0th element and current as 1st element
+	#dont forget to switch between source and sink
+	
+	
 
 
 def query_yes_no(question, default="yes"):
@@ -109,6 +116,7 @@ def main():
 		x=[],
 		y=[],
 		mode='lines+markers',
+		name = 'voltage',
 		stream=stream_0         # (!) embed stream id, 1 per trace
 	)
 
@@ -118,12 +126,31 @@ def main():
 		x =[],
 		y =[],
 		mode = 'lines+markers',
+		name = 'current',
+		yaxis='y2',
 		stream=stream_1         # (!) embed stream id, 1 per trace
 	)
 	data = go.Data([stream_voltage, stream_current])
 
 	# Add title to layout object
-	layout = go.Layout(title='Keithley 228A Battery Charging')
+	layout = go.Layout(title='Double Y Axis Example',
+		yaxis=dict(
+			title='Volts',
+			range=[1, 15]
+		),
+		yaxis2=dict(
+			title='Amps',
+			titlefont=dict(
+				color='rgb(148, 103, 189)'
+			),
+			tickfont=dict(
+				color='rgb(148, 103, 189)'
+			),
+			overlaying='y',
+			side='right',
+			range=[0, 1.5]
+		)
+	)
 
 	# Make a figure object
 	fig = go.Figure(data=data, layout=layout)
@@ -150,18 +177,31 @@ def main():
 
 	# Delay start of stream by 5 sec (time to switch tabs)
 	time.sleep(5)
+	
+	#init
+	instr = visa.ResourceManager()
+	instr.list_resources()
+	keithley = instr.open_resource('GPIB0::11::INSTR')
+	time.sleep(1)
+	keithley.write("V7") #put k228a in remote mode
+	time.sleep(1)
+	keithley.query("G0X") #read current output set point (NOT ACTUAL VALUES)
+	keithley.write("V12.6X") #sets voltage to 12.6V
+	keithley.write("I0.10X") #sets current to 100mA
+	time.sleep(1)
+
 
 	while True:
 
 		# Current time on x-axis, random numbers on y-axis
 		x = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
-		y = (np.cos(k*i/50.)*np.cos(i/50.)+np.random.randn(1))[0]
-
+		values = keithley.query_ascii_values("G5X")
+		y = values[0]
 		# Send data to your plot
 		v.write(dict(x=x, y=y))
 		
 		# Send data to your plot
-		y = (np.cos(k*i/50.)*np.cos(i/50.)+np.random.randn(1))[0]
+		y = values[1]
 		c.write(dict(x=x, y=y))
 		#     Write numbers to stream to append current data on plot,
 		#     write lists to overwrite existing data on plot
