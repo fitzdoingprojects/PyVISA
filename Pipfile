@@ -13,7 +13,8 @@ numpy = "*"
 PyVISA = "*"
 ipython = "*"
 pyvisa-py = "*"
-ivi = "*"
+pyopenms = "*"
+python-ivi = "*"
 
 [requires]
 python_version = "2.7"
